@@ -1,2 +1,6 @@
-git+http://github.com/mrjoes/tornadio.git
 git+http://github.com/evilkost/brukva.git
+TornadIO2==0.0.3
+tornado==2.2.1
+tweepy==1.9
+hiredis==0.1.1
+redis==2.4.12
