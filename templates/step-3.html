@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block head %}
+    <style type="text/css">
+        /* Main styles */
+        body, .outercontainer {
+            padding: 0px;
+            margin: 0px;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .outercontainer {
+            width: 100%;
+            text-align: center;
+        }
+
+        .innercontainer {
+            margin: 0 auto;
+            padding: 0 25px;
+            width: 960px;
+            text-align: left;
+        }
+
+        /* statsbar */
+        .statsbar {
+            background-image: -webkit-linear-gradient(top, #333, #222);
+            width: 915px;
+            margin: 10px 0;
+            background-color: #2C2C2C;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.50), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+            height: 40px;
+            border-radius:4px;
+            padding: 1px 10px;
+        }
+
+
+        .statsbar .stats {
+            float: left;
+        }
+
+        .statsbar .control {
+            padding: 10px 0;
+            float: right;
+            color: #ddd;
+        }
+
+        .statsbar .stats h1 {
+            color: #ddd;
+            font-size:16px;
+            font-weight: bold;
+        }
+
+        /* Tweet styles */
+        div.tweet {
+            height: 120px;
+            width: 280px;
+            padding: 5px;
+            margin: 10px;
+            float: left;
+            background: #eee;
+            border: #aaa solid 1px;
+            border-radius: 6px;
+            overflow: hidden;
+            display:none;
+
+        }
+
+        div.tweet h1 {
+            color: hsl(197,70%,21%);
+            font-size: 14px;
+        }
+
+        div.tweet h1 small {
+            color: hsl(197,70%,61%);
+            font-size: 11px;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        div.tweet p {
+            color: #333;
+            font-size: 13px;
+        }
+
+    </style>
+{% end head %}
+{% block content %}
+    <div class="outercontainer">
+        <div class="innercontainer">
+            <div class="statsbar">
+                <div class='stats'>
+                </div>
+                <div class='control'>
+                    <label>
+                        Throttle: 
+                        <input id="throttle" checked type='checkbox' />
+                    </label>
+                    <label>
+                        Throttling Delay:
+                    </label>
+                    <input id="delay" type='text' value="100" />
+                </div>
+            </div>
+            <div class="tweetcontainer">
+
+            </div>
+        </div>
+    </div>
+{% end content %}
+{% block endofbody %}
+    <script type="text/javascript">
+
+
+        var updateCounter = function() {
+            throttledPs = Math.ceil(counter.perSec('throttled_tweets'));
+            unthrottledPs = Math.ceil(counter.perSec('tweets'));
+
+            $('.statsbar .stats').html('<h1>Unthrottled: ' + unthrottledPs
+            + ' tweets / sec&nbsp;&nbsp;Throttled: ' + throttledPs +
+            ' tweets / sec</h1>');
+
+            setTimeout(updateCounter, 1000);
+        }
+    
+        var destroyTweet = function ($el) {
+            $el.fadeOut('fast', function() {
+                $el.remove();
+            });
+        }
+
+        var renderTweet = function (tweet) {
+            var $container = $('.tweetcontainer'),
+                $tweet = $('<div />');
+
+            $tweet
+                .addClass('tweet')
+                .append('<h1>@' + tweet.username + '<small>' + tweet.name + '</small></h1>')
+                .append('<p>' + tweet.body + '</p>');
+
+            $container.prepend($tweet);
+
+            $tweet.fadeIn('fast');
+
+
+            // Schedule tweet destruction
+            setTimeout(function(){
+
+                destroyTweet($tweet);
+
+            }, 5000); // 5 seconds from now.
+
+
+        }
+        var throttledRenderTweet = _.throttle(function(tweet) {
+            counter.incr('throttled_tweets');
+            renderTweet(tweet);
+
+        }, 100);
+
+        var THROTTLE = true;
+
+        $(function(){
+
+            $('#throttle').click(function(){
+                THROTTLE = $(this)[0].checked;
+                counter.clear('throttled_tweets');
+                counter.clear('tweets');
+            });
+
+            $('#delay').change(function(){
+                counter.clear('throttled_tweets');
+                var throttledRenderTweet = _.throttle(function(tweet) {
+                    counter.incr('throttled_tweets');
+                    renderTweet(tweet);
+                }, parseInt($(this).val()));
+            });
+
+
+            socket.on('simple_tweet', function(tweet){
+                counter.incr('tweets');
+
+                //console.log(JSON.parse(tweet));
+                tweet = JSON.parse(tweet);
+
+                if (THROTTLE) {
+                    throttledRenderTweet(tweet);
+                } else {
+                    renderTweet(tweet);
+                }
+
+
+            });
+
+            updateCounter();
+
+        });
+
+    </script>
+{% end endofbody %}

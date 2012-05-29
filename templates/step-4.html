@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block head %}
+
+<link rel="stylesheet" href="/static/css/example.css" />
+
+<style type="text/css">
+    #map {
+        background: #021019;
+    }
+
+    .compass .back {
+        fill: #256574;
+    }
+
+    .compass .fore, .compass .chevron {
+        stroke: #1AA398;
+    }
+
+    #copy, #copy a {
+        color: #1AA398;
+    }
+
+</style>
+{% end head %}
+{% block content %}
+<div id="map">
+    <span id="copy">
+        &copy; 2010
+        <a href="http://www.cloudmade.com/">CloudMade</a>,
+        <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
+        <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
+    </span>
+</div>
+{% end content %}
+
+{% block endofbody %}
+
+<script type="text/javascript" src="/static/js/d3.js"></script>
+<script type="text/javascript" src="/static/js/polymaps.js"></script>
+
+<script type="text/javascript">
+    // Globals
+    var map,
+        layer,
+        po;
+
+    function drawBlip(x, y, duration, to, from) {
+        /*
+         * To and from objects must have the following attr's:
+         * - radius
+         * - fillColor
+         * - strokeColor
+         * - strokeOpacity
+         * - strokeWidth
+         */
+        layer.append("svg:circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", from.radius)
+            .style("fill", from.fillColor)
+            .style("stroke", from.strokeColor)
+            .style("stroke-opacity", from.strokeOpacity)
+            .style("stroke-width", from.strokeWidth)
+        .transition()
+        .duration(duration)
+        .ease(Math.sqrt)
+            .attr("r", to.radius)
+            .style("fill", to.fillColor)
+            .style("stroke", to.strokeColor)
+            .style("stroke-opacity", to.strokeOpacity)
+            .style("stroke-width", to.strokeWidth)
+        .remove()
+    }
+
+    function unthrottledRegularTweetBlip(data) {
+        var p = map.locationPoint({lat: data.lat, lon: data.lon}),
+            from = {
+                radius: 0,
+                fillColor: 'none',
+                strokeColor: 'hsl(205, 70%, 88%)',
+                strokeOpacity: 1,
+                strokeWidth: 3
+            };
+            to = {
+                radius: 75,
+                fillColor: 'none',
+                strokeColor: 'hsl(205, 70%, 88%)',
+                strokeOpacity: 0,
+                strokeWidth: 0
+            };
+
+        // don't do it if the coords are NaN
+        if (p.x !== p.x || p.y !== p.y) return;
+
+        drawBlip(p.x, p.y, 1000, to, from);
+    }
+    // Keep weak browsers from having a heart attack.
+    var regularTweetBlip = _.throttle(unthrottledRegularTweetBlip, 10)
+
+    $(function() {
+
+        // handy shortcut
+        po = org.polymaps;
+
+        map = po.map()
+            .container(d3.select('#map').append("svg:svg").node())
+            .zoom(3)
+            .center({lat:27.57,lon:8})
+            //drag, wheel, dblclick, arrow controls
+            .add(po.interact());
+
+
+        map.add(po.image()
+            .url(po.url("http://{S}tile.cloudmade.com"
+                + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
+            + "/999/256/{Z}/{X}/{Y}.png")
+            .hosts(["a.", "b.", "c.", ""])));
+
+            map.add(po.compass()
+            .pan("none"));
+
+            layer = d3.select("#map svg").insert("svg:g").attr('class','points');
+
+
+        socket.on('geo_blip', function(geo) {
+            geo = JSON.parse(geo);
+
+            regularTweetBlip(geo)
+
+        });
+
+    });
+
+
+</script>
+
+
+{% end endofbody %}

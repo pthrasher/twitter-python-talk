@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %} Realtime Tweets {% end title %}</title>
+        {% block head %}{% end head %}
+    </head>
+    <body>
+        {% block content %} {% end content %}
+
+        <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/static/js/underscore-min.js"></script>
+        <script type="text/javascript" src="/static/js/socket.io.js"></script>
+        <script type="text/javascript" src="/static/js/misc.js"></script>
+        {% block endofbody %}{% end endofbody %}
+    </body>
+</html>
