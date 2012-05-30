@@ -168,7 +168,7 @@
 
             $('#delay').change(function(){
                 counter.clear('throttled_tweets');
-                var throttledRenderTweet = _.throttle(function(tweet) {
+                throttledRenderTweet = _.throttle(function(tweet) {
                     counter.incr('throttled_tweets');
                     renderTweet(tweet);
                 }, parseInt($(this).val()));
