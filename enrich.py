@@ -17,10 +17,6 @@ EVENTS = {
 }
 
 
-def log_tweet(username, name, tweet_body):
-    now = datetime.datetime.now()
-    print "[%s] @%s (%s): %s" % (now, username, name, tweet_body,)
-
 
 def consume_raw_subscription(tweets):
     """

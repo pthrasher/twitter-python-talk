@@ -39,6 +39,7 @@
 <script type="text/javascript" src="/static/js/polymaps.js"></script>
 
 <script type="text/javascript">
+
     // Globals
     var map,
         layer,
@@ -94,6 +95,7 @@
 
         drawBlip(p.x, p.y, 1000, to, from);
     }
+
     // Keep weak browsers from having a heart attack.
     var regularTweetBlip = _.throttle(unthrottledRegularTweetBlip, 10)
 
